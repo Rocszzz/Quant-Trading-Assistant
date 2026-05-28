@@ -24,6 +24,16 @@ public enum ResultCode {
     UNAUTHORIZED(401, "登录状态已失效"),
 
     /**
+     * 资源不存在
+     */
+    NOT_FOUND(404, "资源不存在"),
+
+    /**
+     * 数据冲突
+     */
+    CONFLICT(409, "数据已存在"),
+
+    /**
      * 业务处理失败
      */
     BUSINESS_ERROR(5001, "业务处理失败"),
