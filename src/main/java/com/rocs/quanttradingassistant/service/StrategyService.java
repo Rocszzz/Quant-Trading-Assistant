@@ -23,6 +23,14 @@ public interface StrategyService {
     List<StrategyVO> listStrategies(String authorization);
 
     /**
+     * 查询当前用户已启用策略列表
+     *
+     * @param authorization HTTP Authorization 请求头
+     * @return 已启用策略列表
+     */
+    List<StrategyVO> listEnabledStrategies(String authorization);
+
+    /**
      * 创建策略配置
      *
      * @param authorization HTTP Authorization 请求头

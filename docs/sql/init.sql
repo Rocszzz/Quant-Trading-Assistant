@@ -220,3 +220,39 @@ ON DUPLICATE KEY UPDATE
     `volume` = VALUES(`volume`),
     `amount` = VALUES(`amount`),
     `change_rate` = VALUES(`change_rate`);
+
+CREATE TABLE IF NOT EXISTS `backtest_record` (
+    `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `user_id` bigint unsigned NOT NULL COMMENT '用户ID',
+    `strategy_id` bigint unsigned NOT NULL COMMENT '策略ID',
+    `symbol` varchar(32) NOT NULL COMMENT '股票代码',
+    `start_date` date NOT NULL COMMENT '回测开始日期',
+    `end_date` date NOT NULL COMMENT '回测结束日期',
+    `initial_cash` decimal(20, 4) NOT NULL COMMENT '初始资金',
+    `final_asset` decimal(20, 4) NOT NULL COMMENT '最终资产',
+    `total_return` decimal(18, 6) NOT NULL DEFAULT 0.000000 COMMENT '总收益率',
+    `max_drawdown` decimal(18, 6) NOT NULL DEFAULT 0.000000 COMMENT '最大回撤',
+    `win_rate` decimal(18, 6) NOT NULL DEFAULT 0.000000 COMMENT '胜率',
+    `trade_count` int unsigned NOT NULL DEFAULT 0 COMMENT '交易次数',
+    `status` varchar(32) NOT NULL COMMENT '回测状态：SUCCESS成功、FAILED失败',
+    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_strategy_id` (`strategy_id`),
+    KEY `idx_symbol_date` (`symbol`, `start_date`, `end_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='回测记录表';
+
+CREATE TABLE IF NOT EXISTS `backtest_trade` (
+    `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `backtest_id` bigint unsigned NOT NULL COMMENT '回测ID',
+    `symbol` varchar(32) NOT NULL COMMENT '股票代码',
+    `trade_date` date NOT NULL COMMENT '交易日期',
+    `side` varchar(16) NOT NULL COMMENT '交易方向：BUY买入、SELL卖出',
+    `price` decimal(18, 4) NOT NULL COMMENT '成交价格',
+    `quantity` decimal(20, 4) NOT NULL COMMENT '成交数量',
+    `amount` decimal(20, 4) NOT NULL COMMENT '成交金额',
+    `reason` varchar(128) NOT NULL COMMENT '成交原因',
+    PRIMARY KEY (`id`),
+    KEY `idx_backtest_id` (`backtest_id`),
+    KEY `idx_symbol_trade_date` (`symbol`, `trade_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='回测成交记录表';

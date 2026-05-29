@@ -57,6 +57,21 @@ public class StrategyController {
     }
 
     /**
+     * 查询当前用户已启用策略列表
+     *
+     * @param authorization 认证请求头
+     * @return 已启用策略列表
+     */
+    @Operation(summary = "查询我的已启用策略列表")
+    @GetMapping("/enabled")
+    public Result<List<StrategyVO>> listEnabledStrategies(
+            @Parameter(description = "Bearer token")
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        return Result.success(strategyService.listEnabledStrategies(authorization));
+    }
+
+    /**
      * 创建策略配置
      *
      * @param authorization 认证请求头
