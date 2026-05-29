@@ -8,12 +8,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/quant_trading_assistant?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: 111111
   data:
     redis:
       host: 127.0.0.1
       port: 6379
-      database: 0
+      database: 1
+      password: 123456
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
@@ -36,6 +37,4 @@ springdoc:
 
 quant:
   auth:
-    username: admin
-    password: admin123
-    nickname: 量化助手演示用户
+    token-expire-hours: 2

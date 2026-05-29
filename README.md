@@ -2,7 +2,7 @@
 
 量化交易助手后端项目，基于 Java 19、Spring Boot 3、Maven、MyBatis-Plus、MySQL、Redis 构建。
 
-当前阶段仅提供后端基础骨架和演示登录能力，不包含真实证券交易下单能力，也不会模拟点击任何证券 App。
+当前阶段提供用户、股票基础信息和自选股模块，不包含真实证券交易下单能力，也不会模拟点击任何证券 App。
 
 ## 技术栈
 
@@ -18,7 +18,7 @@
 
 ```text
 src/main/java/com/rocs/quanttradingassistant
-├── common          # 统一响应、通用枚举
+├── common          # 统一响应、通用枚举、工具类
 ├── config          # 项目配置
 ├── controller      # HTTP 接口
 ├── dto             # 请求参数对象
@@ -55,22 +55,35 @@ mvn spring-boot:run
 - Knife4j 文档：http://localhost:8080/doc.html
 - Swagger UI：http://localhost:8080/swagger-ui.html
 
-## 演示账号
+## 统一响应结构
 
-默认演示账号配置在 `application.yml`：
-
-```yaml
-quant:
-  auth:
-    username: admin
-    password: admin123
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {}
+}
 ```
 
-## 登录接口
+## 阶段 1 接口说明
 
-### POST /api/auth/login
+### 用户模块
 
-请求体：
+#### POST /api/auth/register
+
+用户注册，注册成功后直接返回登录 token。
+
+```json
+{
+  "username": "student001",
+  "password": "student123",
+  "nickname": "量化学习者"
+}
+```
+
+#### POST /api/auth/login
+
+用户登录。
 
 ```json
 {
@@ -79,35 +92,87 @@ quant:
 }
 ```
 
-响应体：
+#### GET /api/auth/me
+
+查询当前登录用户信息。
+
+```text
+Authorization: Bearer 登录令牌
+```
+
+#### PUT /api/auth/nickname
+
+修改当前用户昵称。
+
+```text
+Authorization: Bearer 登录令牌
+```
 
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "token": "登录令牌",
-    "user": {
-      "id": 1,
-      "username": "admin",
-      "nickname": "量化助手演示用户"
-    }
-  }
+  "nickname": "量化研究员"
 }
 ```
 
-### GET /api/auth/me
+#### POST /api/auth/logout
 
-请求头：
+退出当前登录会话。
 
 ```text
 Authorization: Bearer 登录令牌
 ```
 
-### POST /api/auth/logout
+### 股票基础信息模块
 
-请求头：
+#### GET /api/stocks
+
+查询数据库中的股票基础信息列表。
+
+#### GET /api/stocks/search
+
+按股票代码或名称模糊搜索。
+
+```text
+GET /api/stocks/search?keyword=平安
+```
+
+### 自选股模块
+
+#### GET /api/watchlist
+
+查询当前用户自选股列表。
 
 ```text
 Authorization: Bearer 登录令牌
+```
+
+#### POST /api/watchlist
+
+添加自选股，重复添加会返回业务错误。
+
+```text
+Authorization: Bearer 登录令牌
+```
+
+```json
+{
+  "stockId": 1
+}
+```
+
+#### DELETE /api/watchlist/{id}
+
+删除当前用户自己的自选股记录。
+
+```text
+Authorization: Bearer 登录令牌
+```
+
+## 演示账号
+
+初始化脚本会创建演示账号：
+
+```text
+username: admin
+password: admin123
 ```
