@@ -1,15 +1,20 @@
 package com.rocs.quanttradingassistant.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 登录响应展示对象
  *
  * @author Rocs
  * @since 2026/05/28
  */
+@Schema(description = "登录响应展示对象")
 public class LoginResponseVO {
 
+    @Schema(description = "登录令牌", example = "9f1a2b3c4d5e6f")
     private String token;
 
+    @Schema(description = "登录用户信息")
     private LoginUserVO user;
 
     public LoginResponseVO() {

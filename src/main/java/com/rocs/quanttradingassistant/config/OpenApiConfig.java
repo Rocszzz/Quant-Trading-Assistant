@@ -24,7 +24,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Quant Trading Assistant API")
-                        .description("量化交易助手后端接口文档，当前阶段仅提供登录等基础能力")
-                        .version("0.0.1"));
+                        .description("量化交易助手后端接口文档，当前阶段提供用户、股票基础信息和自选股能力")
+                        .version("0.1.0"));
     }
 }
