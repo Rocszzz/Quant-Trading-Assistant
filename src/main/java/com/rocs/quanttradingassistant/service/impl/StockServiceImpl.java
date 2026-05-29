@@ -2,9 +2,11 @@ package com.rocs.quanttradingassistant.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.rocs.quanttradingassistant.common.ResultCode;
 import com.rocs.quanttradingassistant.common.StockStatus;
 import com.rocs.quanttradingassistant.dto.StockSearchRequest;
 import com.rocs.quanttradingassistant.entity.StockInfo;
+import com.rocs.quanttradingassistant.exception.BusinessException;
 import com.rocs.quanttradingassistant.mapper.StockInfoMapper;
 import com.rocs.quanttradingassistant.service.StockService;
 import com.rocs.quanttradingassistant.vo.StockInfoVO;
@@ -54,6 +56,22 @@ public class StockServiceImpl implements StockService {
         return stockInfoMapper.selectList(queryWrapper).stream()
                 .map(this::toVO)
                 .toList();
+    }
+
+    @Override
+    public StockInfoVO getStockBySymbol(String symbol) {
+        if (!StringUtils.hasText(symbol)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "股票代码不能为空");
+        }
+
+        StockInfo stockInfo = stockInfoMapper.selectOne(Wrappers.<StockInfo>lambdaQuery()
+                .eq(StockInfo::getSymbol, symbol.trim())
+                .eq(StockInfo::getStatus, StockStatus.ACTIVE.name())
+                .last("limit 1"));
+        if (stockInfo == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "股票不存在");
+        }
+        return toVO(stockInfo);
     }
 
     private StockInfoVO toVO(StockInfo stockInfo) {

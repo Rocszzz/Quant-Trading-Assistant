@@ -26,4 +26,12 @@ public interface StockService {
      * @return 股票基础信息列表
      */
     List<StockInfoVO> searchStocks(StockSearchRequest request);
+
+    /**
+     * 按股票代码查询股票基础信息
+     *
+     * @param symbol 股票代码
+     * @return 股票基础信息
+     */
+    StockInfoVO getStockBySymbol(String symbol);
 }
