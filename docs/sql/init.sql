@@ -42,6 +42,34 @@ CREATE TABLE IF NOT EXISTS `user_watchlist` (
     KEY `idx_stock_id` (`stock_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户自选股表';
 
+CREATE TABLE IF NOT EXISTS `strategy` (
+    `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `user_id` bigint unsigned NOT NULL COMMENT '用户ID',
+    `name` varchar(64) NOT NULL COMMENT '策略名称',
+    `code` varchar(64) NOT NULL COMMENT '策略编码',
+    `type` varchar(32) NOT NULL COMMENT '策略类型：MA_CROSS双均线、MACD、BREAKOUT突破',
+    `description` varchar(512) DEFAULT NULL COMMENT '策略说明',
+    `enabled` tinyint unsigned NOT NULL DEFAULT 1 COMMENT '是否启用：1启用，0停用',
+    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_code` (`user_id`, `code`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='策略配置表';
+
+CREATE TABLE IF NOT EXISTS `strategy_param` (
+    `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `strategy_id` bigint unsigned NOT NULL COMMENT '策略ID',
+    `param_key` varchar(64) NOT NULL COMMENT '参数键',
+    `param_value` varchar(256) NOT NULL COMMENT '参数值',
+    `param_type` varchar(32) NOT NULL COMMENT '参数类型：NUMBER、STRING、BOOLEAN',
+    `remark` varchar(128) DEFAULT NULL COMMENT '参数说明',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_strategy_param_key` (`strategy_id`, `param_key`),
+    KEY `idx_strategy_id` (`strategy_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='策略参数表';
+
 CREATE TABLE IF NOT EXISTS `market_quote` (
     `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `symbol` varchar(32) NOT NULL COMMENT '股票代码',
@@ -65,6 +93,47 @@ VALUES ('admin', SHA2('admin123', 256), '量化助手演示用户')
 ON DUPLICATE KEY UPDATE
     `password` = IF(`password` = 'admin123', VALUES(`password`), `password`),
     `nickname` = VALUES(`nickname`);
+
+INSERT INTO `strategy` (`user_id`, `name`, `code`, `type`, `description`, `enabled`)
+SELECT `id`, '默认双均线策略模板', 'ma_cross_default', 'MA_CROSS',
+       '短期均线上穿长期均线时形成买入观察信号，仅用于策略配置和后续回测，不执行真实交易。', 1
+FROM `user`
+WHERE `username` = 'admin'
+ON DUPLICATE KEY UPDATE
+    `name` = VALUES(`name`),
+    `type` = VALUES(`type`),
+    `description` = VALUES(`description`),
+    `enabled` = VALUES(`enabled`);
+
+INSERT INTO `strategy_param` (`strategy_id`, `param_key`, `param_value`, `param_type`, `remark`)
+SELECT `id`, 'shortPeriod', '5', 'NUMBER', '短期均线周期'
+FROM `strategy`
+WHERE `code` = 'ma_cross_default'
+  AND `user_id` = (SELECT `id` FROM `user` WHERE `username` = 'admin')
+ON DUPLICATE KEY UPDATE
+    `param_value` = VALUES(`param_value`),
+    `param_type` = VALUES(`param_type`),
+    `remark` = VALUES(`remark`);
+
+INSERT INTO `strategy_param` (`strategy_id`, `param_key`, `param_value`, `param_type`, `remark`)
+SELECT `id`, 'longPeriod', '20', 'NUMBER', '长期均线周期'
+FROM `strategy`
+WHERE `code` = 'ma_cross_default'
+  AND `user_id` = (SELECT `id` FROM `user` WHERE `username` = 'admin')
+ON DUPLICATE KEY UPDATE
+    `param_value` = VALUES(`param_value`),
+    `param_type` = VALUES(`param_type`),
+    `remark` = VALUES(`remark`);
+
+INSERT INTO `strategy_param` (`strategy_id`, `param_key`, `param_value`, `param_type`, `remark`)
+SELECT `id`, 'signalMode', 'CROSS_UP', 'STRING', '信号模式：短线上穿长线'
+FROM `strategy`
+WHERE `code` = 'ma_cross_default'
+  AND `user_id` = (SELECT `id` FROM `user` WHERE `username` = 'admin')
+ON DUPLICATE KEY UPDATE
+    `param_value` = VALUES(`param_value`),
+    `param_type` = VALUES(`param_type`),
+    `remark` = VALUES(`remark`);
 
 INSERT INTO `stock_info` (`symbol`, `name`, `exchange`, `industry`, `status`)
 VALUES
