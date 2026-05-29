@@ -79,7 +79,7 @@ public class BacktestServiceImpl implements BacktestService {
             throw new BusinessException(ResultCode.BAD_REQUEST, "回测开始日期不能晚于结束日期");
         }
 
-        Strategy strategy = getOwnedStrategy(userId, request.getStrategyId());
+        Strategy strategy = resolveBacktestStrategy(userId, request.getStrategyId());
         if (!StrategyType.MA_CROSS.name().equals(strategy.getType())) {
             throw new BusinessException(ResultCode.BAD_REQUEST, "当前版本只支持 MA_CROSS 策略回测");
         }
@@ -98,7 +98,7 @@ public class BacktestServiceImpl implements BacktestService {
             throw new BusinessException(ResultCode.BAD_REQUEST, ex.getMessage());
         }
 
-        BacktestRecord record = createRecord(userId, request, symbol, result);
+        BacktestRecord record = createRecord(userId, request, strategy, symbol, result);
         backtestRecordMapper.insert(record);
         for (BacktestTrade trade : result.getTrades()) {
             trade.setBacktestId(record.getId());
@@ -143,6 +143,29 @@ public class BacktestServiceImpl implements BacktestService {
                 .toList();
     }
 
+    private Strategy resolveBacktestStrategy(Long userId, Long strategyId) {
+        if (strategyId != null) {
+            Strategy strategy = getOwnedStrategy(userId, strategyId);
+            if (!Boolean.TRUE.equals(strategy.getEnabled())) {
+                throw new BusinessException(ResultCode.BAD_REQUEST, "策略未启用，不能执行回测");
+            }
+            return strategy;
+        }
+
+        List<Strategy> enabledStrategies = strategyMapper.selectList(Wrappers.<Strategy>lambdaQuery()
+                .eq(Strategy::getUserId, userId)
+                .eq(Strategy::getEnabled, true)
+                .orderByDesc(Strategy::getUpdatedAt)
+                .orderByDesc(Strategy::getCreatedAt));
+        if (enabledStrategies.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "当前用户没有启用的策略，请先在策略管理中启用策略");
+        }
+        if (enabledStrategies.size() > 1) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "当前用户启用了多个策略，请指定 strategyId 执行回测");
+        }
+        return enabledStrategies.get(0);
+    }
+
     private Strategy getOwnedStrategy(Long userId, Long strategyId) {
         Strategy strategy = strategyMapper.selectById(strategyId);
         if (strategy == null || !userId.equals(strategy.getUserId())) {
@@ -169,12 +192,13 @@ public class BacktestServiceImpl implements BacktestService {
     private BacktestRecord createRecord(
             Long userId,
             BacktestRunRequest request,
+            Strategy strategy,
             String symbol,
             BacktestResult result
     ) {
         BacktestRecord record = new BacktestRecord();
         record.setUserId(userId);
-        record.setStrategyId(request.getStrategyId());
+        record.setStrategyId(strategy.getId());
         record.setSymbol(symbol);
         record.setStartDate(request.getStartDate());
         record.setEndDate(request.getEndDate());

@@ -57,6 +57,21 @@ public class StrategyServiceImpl implements StrategyService {
         List<Strategy> strategies = strategyMapper.selectList(Wrappers.<Strategy>lambdaQuery()
                 .eq(Strategy::getUserId, userId)
                 .orderByDesc(Strategy::getCreatedAt));
+        return toStrategyVOList(strategies);
+    }
+
+    @Override
+    public List<StrategyVO> listEnabledStrategies(String authorization) {
+        Long userId = authService.getCurrentUserId(authorization);
+        List<Strategy> strategies = strategyMapper.selectList(Wrappers.<Strategy>lambdaQuery()
+                .eq(Strategy::getUserId, userId)
+                .eq(Strategy::getEnabled, true)
+                .orderByDesc(Strategy::getUpdatedAt)
+                .orderByDesc(Strategy::getCreatedAt));
+        return toStrategyVOList(strategies);
+    }
+
+    private List<StrategyVO> toStrategyVOList(List<Strategy> strategies) {
         if (strategies.isEmpty()) {
             return Collections.emptyList();
         }

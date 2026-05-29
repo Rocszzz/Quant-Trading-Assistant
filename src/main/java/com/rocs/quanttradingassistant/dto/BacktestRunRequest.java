@@ -17,8 +17,7 @@ import java.time.LocalDate;
 @Schema(description = "运行回测请求参数")
 public class BacktestRunRequest {
 
-    @Schema(description = "策略ID", example = "1")
-    @NotNull(message = "策略ID不能为空")
+    @Schema(description = "策略ID，不传时使用当前用户启用的策略", example = "1")
     @Min(value = 1, message = "策略ID必须大于0")
     private Long strategyId;
 
